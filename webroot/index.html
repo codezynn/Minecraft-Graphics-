@@ -1,29 +1,29 @@
 <!doctype html>
-<!-- CODM Flat Textures: WebUI for SukiSU Ultra / KernelSU. Reads and writes the module's settings files via ksu.exec. -->
+<!-- CODM Blocky Textures: WebUI for SukiSU Ultra / KernelSU. Reads and writes the module's settings files via ksu.exec. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#000000">
-<title>CODM Flat Textures</title>
+<meta name="theme-color" content="#09090b">
+<title>CODM Blocky Textures</title>
 <style>
 :root {
-  --bg: #000000;
-  --card: rgba(20, 20, 20, 0.85);
+  --bg: #09090b;
+  --card: rgba(24, 24, 27, 0.65);
   --card-border: rgba(255, 255, 255, 0.08);
   --fill: rgba(255, 255, 255, 0.04);
   --fill-hover: rgba(255, 255, 255, 0.08);
   --line: rgba(255, 255, 255, 0.1);
   --text: #f4f4f5;
   --mute: #a1a1aa;
-  --primary: #a1a1aa;
-  --primary-glow: rgba(160, 160, 160, 0.2);
-  --accent: #71717a;
+  --primary: #818cf8;
+  --primary-glow: rgba(129, 140, 248, 0.25);
+  --accent: #c084fc;
   --ink: #09090b;
   --warn: #fbbf24;
   --bad: #f87171;
-  --ok: #22c55e;
+  --ok: #34d399;
   --track: rgba(255, 255, 255, 0.12);
   --dock-h: 68px;
   box-sizing: border-box;
@@ -418,16 +418,6 @@ body.pend .apply::after { display: block; animation: pulse 1.5s ease-in-out infi
   .view.active, body.pend .apply::after, #toast.show { animation: none; transition: none; }
   .knob, .knob::after, .mode, .step, summary svg, .btn, .ib { transition: none; }
 }
-
-/* smoother UI */
-* { -webkit-font-smoothing: antialiased; }
-.mode, .btn, .step, .sw, .ib, button {
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, color 0.15s ease;
-}
-.mode:active, .btn:active, .step:active { transform: scale(0.97); }
-.card { transition: opacity 0.2s ease; }
-input[type="range"] { touch-action: pan-y; }
-
 </style>
 </head>
 <body>
@@ -456,13 +446,12 @@ input[type="range"] { touch-action: pan-y; }
       </svg>
       <div class="bt">
         <p class="eyebrow">CODM</p>
-        <h1>Flat Textures</h1>
-        <p class="by">by <b>zyn</b></p>
+        <h1>Blocky Textures</h1>
+        <p class="by">by <b>Q9 Papyrus</b></p>
       </div>
       <span class="ver" id="ver" hidden></span>
     </div>
     <div class="status" id="status" role="status" aria-live="polite"><span class="chip msg">Reading settings…</span></div>
-    <div class="status" style="margin-top:8px"><span class="chip" id="rootChip"><i id="rootLight" style="background:#ef4444"></i> Root: checking…</span></div>
   </header>
   <div class="banner" id="notice" hidden>
     <div id="noticeText">Pindutin lang ang <b>Apply</b> pag may binago ka, getss? Hindi save button ang <b>Export report</b> ngani, pang-bug report lang iyon. Kung wala pang epekto sa laro, buksan mo muna ang CODM isang beses, tapos balik ka rito at tingnan ulit.</div>
@@ -473,17 +462,35 @@ input[type="range"] { touch-action: pan-y; }
   <!-- ========== HOME ========== -->
   <div class="view active" id="v-home">
     <section class="card">
+      <div class="ch"><h2>Quick test</h2></div>
+      <p class="cap">Di sure kung gumagana? Pindutin mo ito para ma-set ang pang-test: Pixel Blocks (Chunky, 8), start delay 10 s (protektahan ang loading screen), off ang render scale, hook agad (hookdelay 0), min texture size 64. Ino-overwrite nito ang: Look (lahat ng modes), Start delay, Min size, Render scale, Hook delay, Module mode. HINDI nito ginagalaw: FPS cap, Freeze/Thread/Core logs, at skip lists. Tapos Apply, buksan ang CODM, at maglaro ka ng mga 5 minuto.</p>
+      <button class="btn primary" id="recTest" type="button">Set recommended settings (test)</button>
+    </section>
+
+    <section class="card">
       <div class="ch"><h2>Look</h2></div>
       <p class="cap">Choose one look. Turning one on turns the others off.</p>
 
       <div class="modes" id="lookSeg" role="radiogroup" aria-label="Look mode">
-        <button type="button" class="mode" role="radio" aria-checked="false" data-m="0">
+        <button type="button" class="mode" role="radio" aria-checked="true" data-m="0">
           <span class="mt"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M6 18 18 6"/></svg><b>Off</b></span>
           <small>Original textures</small>
         </button>
-        <button type="button" class="mode" role="radio" aria-checked="true" data-m="3">
+        <button type="button" class="mode" role="radio" aria-checked="false" data-m="1">
+          <span class="mt"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg><b>Pixel Blocks</b></span>
+          <small>Chunky mosaic look</small>
+        </button>
+        <button type="button" class="mode" role="radio" aria-checked="false" data-m="2">
+          <span class="mt"><svg viewBox="0 0 24 24"><path d="M4 7h16M6.5 12h11M9 17h6"/></svg><b>Detail Cut</b></span>
+          <small>Less fine detail</small>
+        </button>
+        <button type="button" class="mode" role="radio" aria-checked="false" data-m="3">
           <span class="mt"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5"/></svg><b>Flat</b></span>
-          <small>Clean solid · no grass on ground</small>
+          <small>Near-solid colors</small>
+        </button>
+        <button type="button" class="mode" role="radio" aria-checked="false" data-m="4">
+          <span class="mt"><svg viewBox="0 0 24 24"><path d="M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4zM16 16h4v4h-4z"/></svg><b>True Pixelated</b></span>
+          <small>True pixel rendering</small>
         </button>
       </div>
 
@@ -516,17 +523,6 @@ input[type="range"] { touch-action: pan-y; }
         <div class="rh"><span class="lb" id="fpsL">Frame rate cap</span><span class="val" id="fpsV">Off</span></div>
         <p class="desc">Stops the game from going above this many frames per second.</p>
         <div class="steps" id="fpsBox" role="radiogroup" aria-labelledby="fpsL" style="--n:4"></div>
-      </div>
-    </section>
-
-    
-    <section class="card">
-      <h2>Renderer</h2>
-      <div class="row">
-        <div class="rh"><span class="lb">Force OpenGL</span>
-          <button class="sw" id="forceSw" aria-checked="true"><span class="knob"></span></button>
-        </div>
-        <p class="desc">On Vulkan devices, force the game to use OpenGL ES so texture changes work. Recommended on.</p>
       </div>
     </section>
 
@@ -671,7 +667,7 @@ input[type="range"] { touch-action: pan-y; }
       <div class="stack">
         <div>
           <button class="btn warn" id="reset" type="button">Reset defaults</button>
-          <p class="pnote">Recommended setup: <b>Flat</b> (Medium) with 10 s start delay (protects loading screen). Skip rules go back to the built-ins that leave scope / gun / character alone.</p>
+          <p class="pnote">Recommended setup: <b>True Pixelated</b> (Normal size, Sharp edges) with 10 s start delay (protects loading screen). Skip rules go back to the built-ins that leave scope / gun / character alone.</p>
         </div>
         <div>
           <button class="btn warn" id="normal" type="button">Back to normal CODM</button>
@@ -682,9 +678,9 @@ input[type="range"] { touch-action: pan-y; }
 
     <section class="card">
       <h2>About</h2>
-      <div class="kv" style="margin-top:8px"><span>Module</span><b>CODM Flat Textures</b></div>
+      <div class="kv" style="margin-top:8px"><span>Module</span><b>CODM Blocky Textures</b></div>
       <div class="kv"><span>Version</span><b id="aVer">—</b></div>
-      <div class="kv"><span>Author</span><b>zyn</b></div>
+      <div class="kv"><span>Author</span><b>Q9 Papyrus</b></div>
       <div class="kv"><span>Module mode</span><b id="aMode">—</b></div>
       <div class="kv"><span>Settings folder</span><b id="aDir" style="font-size:12px;font-weight:500;word-break:break-all;text-align:right">—</b></div>
       <p class="pnote">The module always runs in mode 4: it hooks the game's engine the moment it loads, with no background polling. If this value ever shows anything else, it is corrected automatically.</p>
@@ -750,7 +746,7 @@ input[type="range"] { touch-action: pan-y; }
   var REC = {
     blk: 0, bias: 0, near: 1, scale: 0, fps: 0,
     fz: 1, th: 1, core: 1, mode: 4,
-    minsz: 64, delay: 10, style: 0, sedge: 1, flat: 0, testtex: 0, ttsize: 0, ttsm: 0, hookdelay: 0
+    minsz: 64, delay: 10, style: 0, sedge: 1, flat: 0, testtex: 1, ttsize: 0, ttsm: 0, hookdelay: 0
   };
   /* "Back to normal CODM": every effect off (logging, mode and skip lists are left alone) */
   var NORMAL = {
@@ -765,12 +761,11 @@ input[type="range"] { touch-action: pan-y; }
   var modeFixTried = false;
 
   var demo = (typeof ksu === "undefined");
-  setTimeout(checkRoot, 300);
   var fake = {
     blk: "0", bias: "0", near: "1", scale: "0", fps: "0",
     fz: "1", th: "1", core: "1", mode: "4",
     minsz: "64", delay: "10", style: "0", sedge: "1", flat: "0", testtex: "0", ttsize: "0", ttsm: "0",
-    hookdelay: "0", skip: "", bloff: "", bldel: "", ver: "1.0.0",
+    hookdelay: "0", skip: "", bloff: "", bldel: "", ver: "v0.38",
     texg: "TEXG t=60 fmt=37812 hex=0x93b4 sz=1024 n=40 ap=40\nTEXG t=60 fmt=37812 hex=0x93b4 sz=2048 n=6 ap=6\nTEXG t=60 fmt=37815 hex=0x93b7 sz=512 n=120 ap=120\nTEXG t=60 fmt=37496 hex=0x9278 sz=256 n=64 ap=60\nTEXG t=60 fmt=37497 hex=0x9279 sz=512 n=12 ap=0",
     ft: "FT fps=55.2 avg=18.1ms p50=17.6 p99=41.3 max=63.0 >33ms=3 >50ms=1 n=276 cap=0 bias=0 scale=100 t=125.0 fz=1"
   };
@@ -786,8 +781,8 @@ input[type="range"] { touch-action: pan-y; }
   var TTSMN = ["Sharp", "Soft"];
   var TTSMD = ["Hard square pixels.", "Softens the jump between mip levels. Pixels stay square."];
   var ttSize = 0, ttSm = 0;
-  var lookMode = 3;   /* 0=Off  3=Flat */
-  var strVal = 2;   /* 1=Normal 2=Medium 3=Extreme for Flat */     /* 1-5 for blocks, 1-4 for detail cut / flat */
+  var lookMode = 0;   /* 0=Off  1=Pixel Blocks  2=Detail Cut  3=Flat  4=True Pixelated */
+  var strVal = 3;     /* 1-5 for blocks, 1-4 for detail cut / flat */
   var fpsVal = 0, minVal = 64;
   var HOOKS = [0, 3, 5, 10], hookVal = 0;
   
@@ -860,27 +855,6 @@ input[type="range"] { touch-action: pan-y; }
     var e = cmd.replace(/'/g, "'\\''");
     return WR === 1 ? "nsenter -t 1 -m -- sh -c '" + e + "'" : "su -c '" + e + "'";
   }
-  
-  function checkRoot() {
-    if (demo) {
-      var chip = document.getElementById("rootChip");
-      if (chip) { chip.innerHTML = '<i style="background:#ef4444"></i> Root: no (preview)'; }
-      return;
-    }
-    sh("id -u").then(function(r) {
-      var uid = (r.stdout || "").trim();
-      var light = document.getElementById("rootLight");
-      var chip = document.getElementById("rootChip");
-      if (uid === "0") {
-        if (light) light.style.background = "#22c55e";
-        if (chip) chip.innerHTML = '<i id="rootLight" style="background:#22c55e;box-shadow:0 0 8px #22c55e"></i> Root: detected';
-      } else {
-        if (light) light.style.background = "#ef4444";
-        if (chip) chip.innerHTML = '<i id="rootLight" style="background:#ef4444"></i> Root: not detected';
-      }
-    });
-  }
-
   function sh(cmd, ms) {
     return new Promise(function (resolve) {
       if (demo) {
@@ -987,7 +961,7 @@ input[type="range"] { touch-action: pan-y; }
       parts.push("[ \"$(cat " + f + " 2>/dev/null)\" = '" + v + "' ] || { echo FAILV:" + k + "; exit 1; }");
     });
     if (bad) { writeFail = "bad value"; return Promise.resolve({ ok: false, stdout: "", stderr: "rejected" }); }
-    var cmd = "D=" + D + "; mkdir -p $D 2>/dev/null; [ -d $D ] || { echo NODIR; exit 1; }; " + parts.join("; ") + "; echo OK";
+    var cmd = "D=" + D + "; [ -d $D ] || { echo NODIR; exit 1; }; " + parts.join("; ") + "; echo OK";
     return queued(function () {
       return sh(cmd).then(function (r) {
         r.ok = r.stdout.indexOf("OK") >= 0 && r.stdout.indexOf("FAIL") < 0;
@@ -1000,9 +974,10 @@ input[type="range"] { touch-action: pan-y; }
   function save(map, label) {
     return writeFiles(map).then(function (r) {
       if (r.ok) {
-        updatePend();
-        toast((label || "Settings") + " saved. Tap Apply for CODM.");
-      } else toast("Save failed" + (writeFail ? " (" + writeFail + ")" : "") + ". Open CODM once then try again.");
+        toast(updatePend()
+          ? (label || "Settings") + " saved. Tap Apply for CODM."
+          : "Back to original. Nothing to apply.");
+      } else toast("Could not save" + (writeFail ? " (" + writeFail + ")" : "") + ". Is the game folder present and root allowed?");
       return r;
     });
   }
@@ -1096,19 +1071,13 @@ input[type="range"] { touch-action: pan-y; }
 
   /* ---------- look + status ---------- */
   function stepItems(m) {
-    var a = [];
-    if (m === 0 || m === 4) return a;
-    if (m === 3) {
-      a.push({ v: 1, b: "Normal", s: "+1" });
-      a.push({ v: 2, b: "Medium", s: "+2" });
-      a.push({ v: 3, b: "Extreme", s: "+3" });
-      return a;
+    var a = [], i;
+    if (m === 4) return a;  /* True Pixelated: on/off only */
+    if (m === 2 || m === 3) {
+      for (i = 1; i <= 4; i++) a.push({ v: i, b: LVN[i], s: "+" + i });
+    } else {
+      for (i = 1; i <= 5; i++) a.push({ v: i, b: BLKN[i], s: BLK[i] + " px" });
     }
-    if (m === 2) {
-      for (var i = 1; i <= 4; i++) a.push({ v: i, b: LVN[i], s: "+" + i });
-      return a;
-    }
-    for (var i = 1; i <= 5; i++) a.push({ v: i, b: BLKN[i], s: BLK[i] + " px" });
     return a;
   }
 
@@ -1116,7 +1085,7 @@ input[type="range"] { touch-action: pan-y; }
     var on = lookMode === 4;
     $("ttSzRow").style.display = on ? "" : "none";
     $("ttSmRow").style.display = on ? "" : "none";
-    $("strRow").style.display = (lookMode === 0 || on) ? "none" : "";
+    $("strRow").style.display = on ? "none" : "";
     $("ttszBox").innerHTML = chipsHtml(TTSZ, ttSize, function (v) { return TTSZN[v]; });
     $("ttszV").textContent = TTSZN[ttSize];
     $("ttszD").textContent = TTSZD[ttSize];
@@ -1148,11 +1117,6 @@ input[type="range"] { touch-action: pan-y; }
     } else if (lookMode === 1) {
       $("strV").textContent = BLK[strVal] + " px";
       $("strD").textContent = BLKN[strVal] + " — every texture is reduced to about " + BLK[strVal] + " pixels across.";
-    } else if (lookMode === 3) {
-      var names = ["", "Normal", "Medium", "Extreme"];
-      var desc = ["", "Mild flat, some detail left", "Clean flat, grass mostly gone", "Solid color, no grass / no detail"];
-      $("strV").textContent = names[strVal] || "Medium";
-      $("strD").textContent = desc[strVal] || "Clean solid colors on ground.";
     } else if (lookMode === 2) {
       $("strV").textContent = LVN[strVal];
       $("strD").textContent = "Textures are sampled " + strVal + " mip level" + (strVal === 1 ? "" : "s") + " smaller. Colors stay the same.";
@@ -1165,15 +1129,11 @@ input[type="range"] { touch-action: pan-y; }
       $("steps").innerHTML = "";
       $("steps").setAttribute("aria-disabled", "true");
     }
-    hideStrengthIfOff(); updateStatus();
+    updateStatus();
   }
 
   function lookModeFromFiles(s) {
     return (parseInt(s.testtex, 10) > 0 || parseInt(s.flat, 10) > 0 || parseInt(s.style, 10) > 0 || parseInt(s.blk, 10) > 0) ? 1 : 0;
-  }
-  function hideStrengthIfOff() {
-    var row = document.getElementById("strRow");
-    if (row) row.style.display = (lookMode === 0) ? "none" : "";
   }
   function updateStatus() {
     var sc = parseInt($("scale").value, 10);
@@ -1194,7 +1154,7 @@ input[type="range"] { touch-action: pan-y; }
     var map = { mode: 4, near: 1, bias: 0, sedge: 1, blk: 8, style: 0, flat: 0, testtex: 0,
                 delay: 10, minsz: 64, scale: 0, hookdelay: 0 };
     writeFiles(map).then(function (r) {
-      if (!r.ok) { toast("Save failed" + (writeFail ? " (" + writeFail + ")" : "") + ". Open CODM once then try again."); return; }
+      if (!r.ok) { toast("Could not save" + (writeFail ? " (" + writeFail + ")" : "") + ". Is the game folder present and root allowed?"); return; }
       return refresh().then(function () {
         updatePend();
         toast("Recommended test settings saved. Tap Apply, open CODM and play 5 minutes.");
@@ -1253,21 +1213,6 @@ input[type="range"] { touch-action: pan-y; }
   }
 
   /* ---------- render state ---------- */
-  
-  var forceOn = true;
-  function renderForce() {
-    var sw = document.getElementById("forceSw");
-    if (sw) sw.setAttribute("aria-checked", forceOn ? "true" : "false");
-  }
-  if (document.getElementById("forceSw")) {
-    document.getElementById("forceSw").addEventListener("click", function () {
-      forceOn = !forceOn;
-      renderForce();
-      writeFiles({ forcegles: forceOn ? 1 : 0 });
-      toast(forceOn ? "Force OpenGL on" : "Force OpenGL off");
-    });
-  }
-
   function render(s) {
     var ban = $("banner");
     ban.innerHTML = "";
@@ -1811,7 +1756,7 @@ input[type="range"] { touch-action: pan-y; }
   $("scale").addEventListener("input", function () {
     $("scaleV").textContent = $("scale").value + "%";
     fill($("scale"));
-    hideStrengthIfOff(); updateStatus();
+    updateStatus();
   });
   $("scale").addEventListener("change", function () {
     var v = parseInt($("scale").value, 10);
@@ -1821,7 +1766,7 @@ input[type="range"] { touch-action: pan-y; }
   onPick("fpsBox", function (v) {
     fpsVal = v;
     renderFps();
-    hideStrengthIfOff(); updateStatus();
+    updateStatus();
     save({ fps: v }, "Frame rate cap");
   });
   onPick("ttszBox", function (v) {
@@ -1898,8 +1843,8 @@ input[type="range"] { touch-action: pan-y; }
     noticeEl.hidden = true;
     try { localStorage.setItem("ct_hide_notice", "1"); } catch (e) {}
   });
-  var reopen = true;
-  try { reopen = localStorage.getItem("ct_reopen") !== "0"; } catch (e) {}
+  var reopen = false;
+  try { reopen = localStorage.getItem("ct_reopen") === "1"; } catch (e) {}
   var reopenEl = $("reopen");
   if (reopenEl) {
     reopenEl.checked = reopen;
@@ -1932,7 +1877,6 @@ input[type="range"] { touch-action: pan-y; }
       });
     });
   });
-
 
   function fmtBytes(n) {
     n = +n || 0;
