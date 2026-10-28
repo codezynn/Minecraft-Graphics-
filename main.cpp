@@ -1046,7 +1046,7 @@ static void log_rotate_if_new_version() {
     size_t pl = strlen(pre), vl = strlen(VERSION);
     while (fgets(line, sizeof line, f)) {
         if (strncmp(line, pre, pl) != 0) continue;
-        /* version token ends at the next space: "=== start v0.33 build=..." */
+        /* version token ends at the next space: "=== start v1.0.0 build=..." */
         if (strncmp(line + pl, VERSION, vl) != 0 || line[pl + vl] != ' ') { old = true; break; }
     }
     fclose(f);
