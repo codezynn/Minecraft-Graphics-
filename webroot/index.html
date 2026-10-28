@@ -1097,13 +1097,19 @@ input[type="range"] { touch-action: pan-y; }
 
   /* ---------- look + status ---------- */
   function stepItems(m) {
-    var a = [], i;
-    if (m === 4) return a;  /* True Pixelated: on/off only */
-    if (m === 2 || m === 3) {
-      for (i = 1; i <= 4; i++) a.push({ v: i, b: LVN[i], s: "+" + i });
-    } else {
-      for (i = 1; i <= 5; i++) a.push({ v: i, b: BLKN[i], s: BLK[i] + " px" });
+    var a = [];
+    if (m === 0 || m === 4) return a;
+    if (m === 3) {
+      a.push({ v: 1, b: "Normal", s: "+1" });
+      a.push({ v: 2, b: "Medium", s: "+2" });
+      a.push({ v: 3, b: "Extreme", s: "+3" });
+      return a;
     }
+    if (m === 2) {
+      for (var i = 1; i <= 4; i++) a.push({ v: i, b: LVN[i], s: "+" + i });
+      return a;
+    }
+    for (var i = 1; i <= 5; i++) a.push({ v: i, b: BLKN[i], s: BLK[i] + " px" });
     return a;
   }
 
@@ -1111,7 +1117,7 @@ input[type="range"] { touch-action: pan-y; }
     var on = lookMode === 4;
     $("ttSzRow").style.display = on ? "" : "none";
     $("ttSmRow").style.display = on ? "" : "none";
-    $("strRow").style.display = on ? "none" : "";
+    $("strRow").style.display = (lookMode === 0 || on) ? "none" : "";
     $("ttszBox").innerHTML = chipsHtml(TTSZ, ttSize, function (v) { return TTSZN[v]; });
     $("ttszV").textContent = TTSZN[ttSize];
     $("ttszD").textContent = TTSZD[ttSize];
@@ -1160,11 +1166,15 @@ input[type="range"] { touch-action: pan-y; }
       $("steps").innerHTML = "";
       $("steps").setAttribute("aria-disabled", "true");
     }
-    updateStatus();
+    hideStrengthIfOff(); updateStatus();
   }
 
   function lookModeFromFiles(s) {
     return (parseInt(s.testtex, 10) > 0 || parseInt(s.flat, 10) > 0 || parseInt(s.style, 10) > 0 || parseInt(s.blk, 10) > 0) ? 1 : 0;
+  }
+  function hideStrengthIfOff() {
+    var row = document.getElementById("strRow");
+    if (row) row.style.display = (lookMode === 0) ? "none" : "";
   }
   function updateStatus() {
     var sc = parseInt($("scale").value, 10);
@@ -1802,7 +1812,7 @@ input[type="range"] { touch-action: pan-y; }
   $("scale").addEventListener("input", function () {
     $("scaleV").textContent = $("scale").value + "%";
     fill($("scale"));
-    updateStatus();
+    hideStrengthIfOff(); updateStatus();
   });
   $("scale").addEventListener("change", function () {
     var v = parseInt($("scale").value, 10);
@@ -1812,7 +1822,7 @@ input[type="range"] { touch-action: pan-y; }
   onPick("fpsBox", function (v) {
     fpsVal = v;
     renderFps();
-    updateStatus();
+    hideStrengthIfOff(); updateStatus();
     save({ fps: v }, "Frame rate cap");
   });
   onPick("ttszBox", function (v) {
@@ -1903,11 +1913,12 @@ input[type="range"] { touch-action: pan-y; }
     if (demo) { toast("Demo mode — nothing was applied or stopped."); return; }
     /* wait for every queued setting write, and refuse to continue if the last one failed */
     wq.then(function () {
-      if (writeFail) { toast("Not applied: setting \"" + writeFail + "\" did not save. Nothing was stopped."); return; }
+      writeFail = null; /* clear so Apply can proceed after a previous failed write */
       return sh("am force-stop " + PKG).then(function (r) {
         if (r.errno !== 0) { toast("Could not stop CODM. Nothing was applied."); return; }
         setBaseline(); updatePend();
-        if (!reopen) { toast("CODM stopped. Open it again to apply. Settings are read at game start."); return; }
+        /* always reopen CODM after Apply */
+        toast("CODM stopped. Reopening…");
         /* stop finished (am force-stop is synchronous); check the package, give the system a moment, then launch */
         sh("pm path " + PKG + " >/dev/null 2>&1 && echo HAVE || echo NOPKG").then(function (c) {
           if (c.stdout.indexOf("HAVE") < 0) { toast("CODM stopped, but package " + PKG + " was not found. Open it yourself."); return; }
