@@ -47,7 +47,7 @@
 #endif
 
 /* One place for the version. Keep in sync with module.prop (bump +1 every update). */
-#define VERSION "1.0.0"
+#define VERSION "v0.38"
 #define PKG "com.garena.game.codm"
 #define DIR "/data/data/" PKG "/files/"
 #define LOGF DIR "codm_tex.log"
@@ -67,7 +67,6 @@
 #define STYF DIR "style.txt"
 #define SEDF DIR "sedge.txt"
 #define FLATF DIR "flat.txt"
-#define FORCEF DIR "forcegles.txt"
 #define TTEXF DIR "testtex.txt"
 #define TTSZF DIR "ttsize.txt"
 #define TTSMF DIR "ttsm.txt"
@@ -175,7 +174,6 @@ static void h_del(GLsizei n, const GLuint *ids) {
 static std::atomic<int> g_style{0};
 static std::atomic<int> g_sedge{1};
 static std::atomic<int> g_flat{0};
-static std::atomic<int> g_forcegles{1};  /* 1 = force GLES on Vulkan devices */
 static std::atomic<int> g_ttsize{0};   /* ttsize.txt: -2 = base level only (shimmers) | -1 = mips capped at level 3 | 0 = normal | 1-3 = coarser pixels (2x, 4x, 8x) */
 static std::atomic<int> g_ttsm{0};     /* ttsm.txt: 0 = sharp | 1 = soft blend between mip levels */
 static std::atomic<int> g_testtex{1};  /* testtex.txt: 0 = off | 1 = True Pixelated (NEAREST sampling, full mip chain) */
@@ -377,20 +375,15 @@ static void h_st(GLenum t, GLsizei lv, GLenum fmt, GLsizei w, GLsizei h) {
         return;
     }
 
-    /* Flat Color: strength 1=Normal, 2=Medium, 3=Extreme (smallest mip, no grass). */
+    /* v19 Flat Color: lock to tiny mips so the surface is near-solid color (lighting still applies). */
     int fl = g_flat.load();
     if (fl > 0) {
+        /* strength 1..4 → target remaining size ~8, 4, 2, 1 px */
+        static const int FTGT[] = {0, 8, 4, 2, 1};
+        int tgt = FTGT[fl < 4 ? fl : 4];
         int base = 0;
-        if (!skip && lv > 1) {
-            if (fl >= 3) {
-                base = (int)lv - 1;               /* Extreme: solid, no grass */
-            } else if (fl == 2) {
-                base = std::max(0, (int)lv - 2);  /* Medium: very clean */
-            } else {
-                base = std::max(0, (int)lv - 3);  /* Normal: mild flat */
-            }
-            if (base < 0) base = 0;
-        }
+        if (!skip && mx > tgt)
+            while ((mx >> (base + 1)) >= tgt && base < (int)lv - 1) base++;
         grp_note((int)fmt, mx, base > 0);
         if (base > 0 && real_tp) {
             real_tp(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, base);
@@ -403,7 +396,7 @@ static void h_st(GLenum t, GLsizei lv, GLenum fmt, GLsizei w, GLsizei h) {
             }
             int n = ++g_applied;
             if (n <= 100 || n % 500 == 0)
-                L("FLAT #%d %dx%d lv=%d fmt=0x%x base=%d (clean solid)\n", n, w, h, lv, fmt, base);
+                L("FLAT #%d %dx%d lv=%d fmt=0x%x base=%d tgt=%d\n", n, w, h, lv, fmt, base, tgt);
         }
         return;
     }
@@ -1001,7 +994,6 @@ static void *wrap(const char *n, void *r) {
         if (!vk_once.exchange(1)) {
             st_set("gfx", "vulkan");
             L("GFX vk-symbol %s requested\n", n);
-            if (g_forcegles.load()) L("FORCE GLES requested — Vulkan load should be blocked by companion or manual GLES force\n");
             L("GFX api=vulkan (detected) - texture effects, fps cap and render scale are NOT supported on Vulkan in %s; use GLES (disable modules that force Vulkan, e.g. core-vulkan)\n", VERSION);
         }
         return r;
@@ -1075,9 +1067,9 @@ static void log_rotate_if_new_version() {
 struct CfgKey { const char *name; const char *path; int def; bool optional; };
 static const CfgKey CFG_KEYS[] = {
     {"bias", CFGF, 0, false}, {"fps", FPSF, 0, false}, {"scale", SCLF, 0, false}, {"fz", FZF, 1, false},
-    {"th", THF, 1, false}, {"core", COREF, 1, false}, {"near", NEARF, 1, false}, {"blk", BLKF, 8, false},
+    {"th", THF, 1, false}, {"core", COREF, 1, false}, {"near", NEARF, 1, false}, {"blk", BLKF, 0, false},
     {"minsz", MINF, 64, false}, {"delay", DLYF, 10, false}, {"style", STYF, 0, false}, {"sedge", SEDF, 1, false},
-    {"flat", FLATF, 2, false}, {"forcegles", FORCEF, 1, false}, {"testtex", TTEXF, 0, false}, {"ttsize", TTSZF, 0, false}, {"ttsm", TTSMF, 0, false},
+    {"flat", FLATF, 0, false}, {"testtex", TTEXF, 1, false}, {"ttsize", TTSZF, 0, false}, {"ttsm", TTSMF, 0, false},
     {"hookdelay", HDLYF, 0, true},
 };
 static int g_scale_safety = 0;   /* >0 = render scale was switched off at this launch; value = the percent that was active */
@@ -1243,17 +1235,7 @@ static void load_cfg() {
         f = fopen(SEDF, "w");
         if (f) { fprintf(f, "1\n"); fclose(f); }
     }
-    
-    f = fopen(FORCEF, "r");
-    if (f) {
-        int v = 1;
-        if (fscanf(f, "%d", &v) == 1) g_forcegles = (v != 0);
-        fclose(f);
-    } else {
-        f = fopen(FORCEF, "w");
-        if (f) { fprintf(f, "1\n"); fclose(f); }
-    }
-f = fopen(FLATF, "r");
+    f = fopen(FLATF, "r");
     if (f) {
         int v = 0;
         if (fscanf(f, "%d", &v) == 1) g_flat = std::max(0, std::min(v, 4));
@@ -1433,7 +1415,6 @@ static void log_start(int mode) {
 #else
     const char *abi = "other";
 #endif
-    L("forcegles=%d\n", g_forcegles.load());
     L("=== start %s build=%s %s abi=%s mode=%d bias=%d fpscap=%d scale=%d fz=%d th=%d core=%d near=%d blk=%d min=%d delay=%d skip=%d style=%d sedge=%d flat=%d testtex=%d builtin=%d ===\n",
       VERSION, __DATE__, __TIME__, abi, mode, g_bias.load(), g_fps.load(), g_scale.load(), g_fz.load(), g_th.load(), g_core.load(), g_near.load(), g_blk.load(), g_minsz.load(), g_delay.load(), (int)g_skip.size(), g_style.load(), g_sedge.load(), g_flat.load(), g_testtex.load(), (int)(sizeof g_builtin / sizeof g_builtin[0]));
     st_set("ver", VERSION); st_seti("pid", (long long)getpid()); st_set("abi", abi); st_set("stage", "started");
