@@ -987,7 +987,7 @@ input[type="range"] { touch-action: pan-y; }
       parts.push("[ \"$(cat " + f + " 2>/dev/null)\" = '" + v + "' ] || { echo FAILV:" + k + "; exit 1; }");
     });
     if (bad) { writeFail = "bad value"; return Promise.resolve({ ok: false, stdout: "", stderr: "rejected" }); }
-    var cmd = "D=" + D + "; [ -d $D ] || { echo NODIR; exit 1; }; " + parts.join("; ") + "; echo OK";
+    var cmd = "D=" + D + "; mkdir -p $D 2>/dev/null; [ -d $D ] || { echo NODIR; exit 1; }; " + parts.join("; ") + "; echo OK";
     return queued(function () {
       return sh(cmd).then(function (r) {
         r.ok = r.stdout.indexOf("OK") >= 0 && r.stdout.indexOf("FAIL") < 0;
@@ -1000,10 +1000,9 @@ input[type="range"] { touch-action: pan-y; }
   function save(map, label) {
     return writeFiles(map).then(function (r) {
       if (r.ok) {
-        toast(updatePend()
-          ? (label || "Settings") + " saved. Tap Apply for CODM."
-          : "Back to original. Nothing to apply.");
-      } else toast("Could not save" + (writeFail ? " (" + writeFail + ")" : "") + ". Is the game folder present and root allowed?");
+        updatePend();
+        toast((label || "Settings") + " saved. Tap Apply for CODM.");
+      } else toast("Save failed" + (writeFail ? " (" + writeFail + ")" : "") + ". Open CODM once then try again.");
       return r;
     });
   }
@@ -1195,7 +1194,7 @@ input[type="range"] { touch-action: pan-y; }
     var map = { mode: 4, near: 1, bias: 0, sedge: 1, blk: 8, style: 0, flat: 0, testtex: 0,
                 delay: 10, minsz: 64, scale: 0, hookdelay: 0 };
     writeFiles(map).then(function (r) {
-      if (!r.ok) { toast("Could not save" + (writeFail ? " (" + writeFail + ")" : "") + ". Is the game folder present and root allowed?"); return; }
+      if (!r.ok) { toast("Save failed" + (writeFail ? " (" + writeFail + ")" : "") + ". Open CODM once then try again."); return; }
       return refresh().then(function () {
         updatePend();
         toast("Recommended test settings saved. Tap Apply, open CODM and play 5 minutes.");
@@ -1899,8 +1898,8 @@ input[type="range"] { touch-action: pan-y; }
     noticeEl.hidden = true;
     try { localStorage.setItem("ct_hide_notice", "1"); } catch (e) {}
   });
-  var reopen = false;
-  try { reopen = localStorage.getItem("ct_reopen") === "1"; } catch (e) {}
+  var reopen = true;
+  try { reopen = localStorage.getItem("ct_reopen") !== "0"; } catch (e) {}
   var reopenEl = $("reopen");
   if (reopenEl) {
     reopenEl.checked = reopen;
@@ -1913,12 +1912,11 @@ input[type="range"] { touch-action: pan-y; }
     if (demo) { toast("Demo mode — nothing was applied or stopped."); return; }
     /* wait for every queued setting write, and refuse to continue if the last one failed */
     wq.then(function () {
-      writeFail = null; /* clear so Apply can proceed after a previous failed write */
+      if (writeFail) { toast("Not applied: setting \"" + writeFail + "\" did not save. Nothing was stopped."); return; }
       return sh("am force-stop " + PKG).then(function (r) {
         if (r.errno !== 0) { toast("Could not stop CODM. Nothing was applied."); return; }
         setBaseline(); updatePend();
-        /* always reopen CODM after Apply */
-        toast("CODM stopped. Reopening…");
+        if (!reopen) { toast("CODM stopped. Open it again to apply. Settings are read at game start."); return; }
         /* stop finished (am force-stop is synchronous); check the package, give the system a moment, then launch */
         sh("pm path " + PKG + " >/dev/null 2>&1 && echo HAVE || echo NOPKG").then(function (c) {
           if (c.stdout.indexOf("HAVE") < 0) { toast("CODM stopped, but package " + PKG + " was not found. Open it yourself."); return; }
@@ -1934,6 +1932,7 @@ input[type="range"] { touch-action: pan-y; }
       });
     });
   });
+
 
   function fmtBytes(n) {
     n = +n || 0;
